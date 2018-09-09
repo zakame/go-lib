@@ -33,13 +33,10 @@ import (
 
 // Cache is a naive in-memory cache.  Safe for concurrent access.
 type Cache struct {
-	// MaxEntries is the maximum number of entries before an item is
-	// evicted.  Zero means no limit.
-	MaxEntries int
-
-	mu    sync.Mutex
-	ll    *list.List
-	cache map[interface{}]*list.Element
+	maxEntries int
+	mu         sync.Mutex
+	ll         *list.List
+	cache      map[interface{}]*list.Element
 }
 
 // Key may be any value that is comparable.
@@ -54,7 +51,7 @@ type entry struct {
 // If maxEntries is zero, the cache has no limit.
 func New(maxEntries int) *Cache {
 	return &Cache{
-		MaxEntries: maxEntries,
+		maxEntries: maxEntries,
 		ll:         list.New(),
 		cache:      make(map[interface{}]*list.Element),
 	}
@@ -73,7 +70,7 @@ func (c *Cache) Add(key Key, value interface{}) {
 	}
 	ele := c.ll.PushFront(&entry{key, value})
 	c.cache[key] = ele
-	if c.MaxEntries != 0 && c.ll.Len() > c.MaxEntries {
+	if c.maxEntries != 0 && c.ll.Len() > c.maxEntries {
 		old := c.ll.Back()
 		if old != nil {
 			c.ll.Remove(old)
